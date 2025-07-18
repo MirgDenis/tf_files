@@ -34,20 +34,21 @@ resource "libvirt_volume" "image" {
 }
 
 resource "libvirt_volume" "base" {
-  name           = "master.qcow2"
+  count	= var.instance_count
+  name = "vm-${count.index}.qcow2"
   base_volume_id = libvirt_volume.image.id
   size = 100 * 1024 * 1024 * 1024
 }
 
 resource "libvirt_domain" "vm" {
-  count = 3
+  count = var.instance_count
   name   = "vm-${count.index}"
   memory = 4096
   vcpu   = 2
   cloudinit = libvirt_cloudinit_disk.cloud_init.id
 
   disk {
-    volume_id = libvirt_volume.base.id
+    volume_id = libvirt_volume.base[count.index].id
   }
 
   network_interface {
