@@ -19,7 +19,7 @@ data "template_file" "user_data" {
 
 resource "libvirt_network" "network" {
   name		= "terraform_net"
-  addresses	= ["172.18.0.0/16"]
+  addresses	= [var.cidr_block]
 }
 
 resource "libvirt_cloudinit_disk" "cloud_init" {
@@ -40,9 +40,10 @@ resource "libvirt_volume" "base" {
 }
 
 resource "libvirt_domain" "vm" {
-  name   = "vm"
-  memory = 16384
-  vcpu   = 8
+  count = 3
+  name   = "vm-${count.index}"
+  memory = 4096
+  vcpu   = 2
   cloudinit = libvirt_cloudinit_disk.cloud_init.id
 
   disk {
@@ -51,6 +52,6 @@ resource "libvirt_domain" "vm" {
 
   network_interface {
     network_name = libvirt_network.network.name
-    addresses = ["172.18.0.2"]
+    addresses = [cidrhost(var.cidr_block, count.index + 10)]
   }
 }
